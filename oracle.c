@@ -38,7 +38,6 @@ uint8_t *oracle_distances(void)
         while (length) distance[chain[--length]] = (uint8_t) ++d;
     }
     
-    free(distance);
     free(moves);
     return distance;
 }
