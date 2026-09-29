@@ -26,19 +26,19 @@
 uint8_t *oracle_distances(void);
 int oracle_replay(uint32_t rank, const uint8_t *path, unsigned length);
 
-/* 獨立確認之理論預期直徑 (HTM Metric) */
+/* Theoretical maximum diameters (HTM Metric) */
 enum {
-    EXPECTED_MAX_PERM = 7,         /* 7! = 5040 排列子空間直徑 */
-    EXPECTED_MAX_ORIENT = 6,       /* 3^6 = 729 朝向子空間直徑 */
-    EXPECTED_MAX_ORACLE = 11       /* 全狀態圖直徑 (God's Number) */
+    EXPECTED_MAX_PERM = 7,         /* 7! = 5040 permutation space diameter */
+    EXPECTED_MAX_ORIENT = 6,       /* 3^6 = 729 orientation space diameter */
+    EXPECTED_MAX_ORACLE = 11       /* full state graph diameter (God's Number) */
 };
 
-/* 逐項驗證 permutation 與 orientation 轉移表的一致性、雙射性與群論性質 */
+/* Procedure for verifying the transition tables and their properties */
 static int verify_transition_tables(void)
 {
     state_t state;
 
-    /* 1. 驗證 Permutation 轉移表 (3 面 x 5040 排列) */
+    /* verify Permutation transition table (3 faces x 5040 permutations) */
     for (uint8_t face = 0; face < 3; ++face) {
         uint8_t seen[PERMUTATIONS] = {0};
 
@@ -47,14 +47,14 @@ static int verify_transition_tables(void)
             state_t next = quarter_turn(state, face);
             uint16_t expected = (uint16_t) (rank_state(&next) / ORIENTATIONS);
 
-            /* (1) 逐項與原始模型重算結果比對 */
+            /* check the computed result against the expected value */
             if (permutation[face][rank] != expected) {
                 fprintf(stderr, "FAIL: permutation mismatch at face %u, rank %u (got %u, expected %u)\n",
                         face, rank, permutation[face][rank], expected);
                 return 0;
             }
 
-            /* (2) 雙射性檢驗：同一面轉動不得映射至相同 rank */
+            /* verify bijectivity: no two different permutations can map to the same target */
             if (seen[expected]) {
                 fprintf(stderr, "FAIL: permutation non-bijective at face %u, duplicate target %u\n",
                         face, expected);
@@ -62,7 +62,7 @@ static int verify_transition_tables(void)
             }
             seen[expected] = 1;
 
-            /* (3) 群論階數檢驗：連續轉動同一面 4 次必為恆等映射 (M^4 == I) */
+            /* group theory order check: applying the same move four times should yield the identity */
             uint16_t p = rank;
             for (int t = 0; t < 4; ++t)
                 p = permutation[face][p];
@@ -73,7 +73,7 @@ static int verify_transition_tables(void)
         }
     }
 
-    /* 2. 驗證 Orientation 轉移表 (3 面 x 729 朝向) */
+    /* verify Orientation transition table (3 faces x 729 orientations) */
     for (uint8_t face = 0; face < 3; ++face) {
         uint8_t seen[ORIENTATIONS] = {0};
 
@@ -82,14 +82,14 @@ static int verify_transition_tables(void)
             state_t next = quarter_turn(state, face);
             uint16_t expected = (uint16_t) (rank_state(&next) % ORIENTATIONS);
 
-            /* (1) 逐項與原始模型重算結果比對 */
+            /* compare the computed result with the expected value */
             if (orientation[face][rank] != expected) {
                 fprintf(stderr, "FAIL: orientation mismatch at face %u, rank %u (got %u, expected %u)\n",
                         face, rank, orientation[face][rank], expected);
                 return 0;
             }
 
-            /* (2) 雙射性檢驗 */
+            /* bijectivity check */
             if (seen[expected]) {
                 fprintf(stderr, "FAIL: orientation non-bijective at face %u, duplicate target %u\n",
                         face, expected);
@@ -97,7 +97,7 @@ static int verify_transition_tables(void)
             }
             seen[expected] = 1;
 
-            /* (3) 群論階數檢驗 (M^4 == I) */
+            /* group theory order check */
             uint16_t o = rank;
             for (int t = 0; t < 4; ++t)
                 o = orientation[face][o];
@@ -136,18 +136,14 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    /* ==============================================================
-     * 1. 逐項核對 Permutation 與 Orientation 轉移表
-     * ============================================================== */
+    /* verify transition tables and their properties */
     if (!verify_transition_tables()) {
         free(distance);
         return 1;
     }
     printf("Transition Tables: PASS (Exact model match, Bijective, Order-4 verified)\n");
 
-    /* ==============================================================
-     * 2. 驗證 Solved state 對應的 entry (rank 0 步數必須為 0)
-     * ============================================================== */
+    /* verify that the solved state has a distance of 0 */
     if (permutation_distance[0] != 0 || orientation_distance[0] != 0 || distance[0] != 0) {
         fprintf(stderr, "FAIL: solved state entry is not 0 (P=%u, O=%u, Oracle=%u)\n",
                 permutation_distance[0], orientation_distance[0], distance[0]);
@@ -163,9 +159,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    /* ==============================================================
-     * 3. 驗證距離表完整填入 (無 UINT8_MAX) 並與獨立預期直徑比對
-     * ============================================================== */
+    /* verify the completeness and correctness of the distance tables */
     uint8_t max_perm = 0;
     for (unsigned i = 0; i < PERMUTATIONS; ++i) {
         if (i != 0 && permutation_distance[i] == 0) {
@@ -245,12 +239,10 @@ int main(int argc, char **argv)
     /* These two current solvers use unpacked arrays. Revisit if packing changes. */
     puts("H4: N/A (current distance arrays are unpacked)");
 
-    /* ==============================================================
-     * 4. IDA* 抽樣 / 全狀態驗證迴圈 (驗證下界可採納性與求解最優性)
-     * ============================================================== */
-    /* Exclude the earlier solved-state check, table building and H1 scan.
-     * Accumulate all solve_ida calls in this corpus; do not reset per state.
-     * lower_bound calls in verifier code are not instrumented. */
+    /* Verify the search algorithm against the oracle distances. 
+       Exclude the earlier solved-state check, table building and H1 scan.
+       Accumulate all solve_ida calls in this corpus; do not reset per state.
+       lower_bound calls in verifier code are not instrumented. */
     search_stats = (search_stats_t) {0};
     clock_t start = clock();
     
@@ -284,6 +276,7 @@ int main(int argc, char **argv)
     printf("mod3_evaluations: %" PRIu64 "\n", search_stats.mod3_evaluations);
     printf("move_lut_reads: %" PRIu64 "\n", search_stats.move_lut_reads);
     printf("heuristic_calls: %" PRIu64 "\n", search_stats.heuristic_calls);
+    
 #if VERIFY_OPTIMIZED
     printf("Move LUT element bytes: %zu\n",
            sizeof move_face + sizeof move_turn + sizeof next_face_start);
@@ -291,11 +284,12 @@ int main(int argc, char **argv)
     puts("Move LUT element bytes: 0");
 #endif
     /* goal_tests counts a whole goal predicate, not its primitive comparisons.
-     * div3/mod3 count only solve_ida expressions (including short-circuiting).
-     * move_lut_reads excludes transition/distance tables and last_face loads.
-     * heuristic_calls includes initial bound evaluation, but not H1 checks.
-     * sizeof counts array element storage, not total linked static data.
-     * Do not sum different metrics into a purported instruction count. */
+       div3/mod3 count only solve_ida expressions (including short-circuiting).
+       move_lut_reads excludes transition/distance tables and last_face loads.
+       heuristic_calls includes initial bound evaluation, but not H1 checks.
+       sizeof counts array element storage, not total linked static data.
+       Do not sum different metrics into a purported instruction count. */
+
     printf("Tables: %zu bytes; DFS frames: %zu bytes; path: %u bytes\n",
            sizeof permutation + sizeof orientation + sizeof permutation_distance + sizeof orientation_distance,
            sizeof(frame_t) * (MAX_SOLUTION + 1), MAX_SOLUTION);

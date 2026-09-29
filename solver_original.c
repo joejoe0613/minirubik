@@ -10,7 +10,7 @@ enum {
     STATES = PERMUTATIONS * ORIENTATIONS,
     MOVES = 9
 };
-
+  
 typedef struct {
     uint8_t p[CUBIES], o[CUBIES];
 } state_t;
