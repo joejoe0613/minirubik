@@ -2,6 +2,26 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+/* Source-level search counters. Enabled by verify.c only.
+ * COUNT/MEASURE do not change the search result. MEASURE evaluates its
+ * expression once and preserves short-circuit evaluation at call sites.
+ * These counts are not CPU/RV32I instructions or hardware memory accesses.
+ */
+#ifdef SEARCH_STATS
+typedef struct {
+    uint64_t goal_tests;
+    uint64_t div3_evaluations;
+    uint64_t mod3_evaluations;
+    uint64_t move_lut_reads;
+    uint64_t heuristic_calls;
+} search_stats_t;
+static search_stats_t search_stats;
+#define COUNT(field) ((void) ++search_stats.field)
+#else
+#define COUNT(field) ((void) 0)
+#endif
+
+#define MEASURE(field, expression) (COUNT(field), (expression))
 
 enum {
     CUBIES = 7,
@@ -284,7 +304,7 @@ typedef struct {
 static int solve_ida(uint16_t p, uint16_t o, uint8_t path[MAX_SOLUTION])
 {
     frame_t stack[MAX_SOLUTION + 1];
-    unsigned bound = lower_bound(p, o);
+    unsigned bound = MEASURE(heuristic_calls, lower_bound(p, o));
 
     while (bound <= MAX_SOLUTION) {
         unsigned next_bound = MAX_SOLUTION + 1;
@@ -294,6 +314,7 @@ static int solve_ida(uint16_t p, uint16_t o, uint8_t path[MAX_SOLUTION])
         for (;;) {
             frame_t *frame = &stack[depth];
 
+            COUNT(goal_tests);
             if (frame->p == 0 && frame->o == 0)
                 return (int) depth;
 
@@ -305,23 +326,24 @@ static int solve_ida(uint16_t p, uint16_t o, uint8_t path[MAX_SOLUTION])
             }
             
             uint8_t move = frame->next_move++;
-            unsigned face = move / 3U;
+            unsigned face = MEASURE(div3_evaluations, move / 3U);
 
             /* Two consecutive moves of one face combine into <=1 move.
              * Thus no shortest path contains such a pair. */
-            if (depth && face == path[depth - 1] / 3U) {
+            if (depth && face == MEASURE(div3_evaluations, path[depth - 1] / 3U)) {
                 frame->next_move = (uint8_t) ((face + 1) * 3);
                 continue;
             }
 
-            if (move % 3U == 0) {
+            if (MEASURE(mod3_evaluations, move % 3U) == 0) {
                 frame->next_p = frame->p;
                 frame->next_o = frame->o;
             }
             
             frame->next_p = permutation[face][frame->next_p];
             frame->next_o = orientation[face][frame->next_o];
-            unsigned f = depth + 1 + lower_bound(frame->next_p, frame->next_o);
+            unsigned f = depth + 1 + MEASURE(heuristic_calls,
+                lower_bound(frame->next_p, frame->next_o));
 
             if (f > bound) {
                 if (f < next_bound)

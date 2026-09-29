@@ -1,0 +1,54 @@
+100000/3674160 verified
+200000/3674160 verified
+300000/3674160 verified
+400000/3674160 verified
+500000/3674160 verified
+600000/3674160 verified
+700000/3674160 verified
+800000/3674160 verified
+900000/3674160 verified
+1000000/3674160 verified
+1100000/3674160 verified
+1200000/3674160 verified
+1300000/3674160 verified
+1400000/3674160 verified
+1500000/3674160 verified
+1600000/3674160 verified
+1700000/3674160 verified
+1800000/3674160 verified
+1900000/3674160 verified
+2000000/3674160 verified
+2100000/3674160 verified
+2200000/3674160 verified
+2300000/3674160 verified
+2400000/3674160 verified
+2500000/3674160 verified
+2600000/3674160 verified
+2700000/3674160 verified
+2800000/3674160 verified
+2900000/3674160 verified
+3000000/3674160 verified
+3100000/3674160 verified
+3200000/3674160 verified
+3300000/3674160 verified
+3400000/3674160 verified
+3500000/3674160 verified
+3600000/3674160 verified
+Testing: solver.c
+Search coverage: 3674160/3674160 states (exhaustive)
+Transition Tables: PASS (Exact model match, Bijective, Order-4 verified)
+Distance Tables: PASS (All filled; Solved entry = 0; Max P = 7, Max O = 6, Diameter = 11)
+H2: PASS (including zero-distance uniqueness in both abstractions)
+H1: PASS all 3674160 states
+H4: N/A (current distance arrays are unpacked)
+PASS 3674160/3674160 states: optimal length, original-model replay; 595.644 host clock seconds
+H3: PASS all states
+Time includes counters, search, correctness checks and replay; not a speedup benchmark.
+Search operation counts (whole corpus; C source-level events):
+goal_tests: 79183659451
+div3_evaluations: 138470396802
+mod3_evaluations: 59421909877
+move_lut_reads: 0
+heuristic_calls: 59425584037
+Move LUT element bytes: 0
+Tables: 40383 bytes; DFS frames: 120 bytes; path: 11 bytes
