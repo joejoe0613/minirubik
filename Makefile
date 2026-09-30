@@ -12,28 +12,50 @@ VECTORS := tests/solutions.txt
 INVALID_STATES := 1234567111111 123456711111111 02345671111111 82345671111111 \
 	12345671111110 12345671111114 1234567111111a 11345671111111 12345671111112
 
-.PHONY: all check check-baseline exhaustive prove prove-baseline clean indent
+.PHONY: all check check-before check-after check-baseline \
+        exhaustive exhaustive-before exhaustive-after \
+        prove prove-baseline clean indent
 
-all: solver mini
+all: solver solver_opt mini
 
 solver: solver.c
+	$(CC) $(CFLAGS) $< -o $@
+
+solver_opt: solver_opt.c
 	$(CC) $(CFLAGS) $< -o $@
 
 mini: mini.c
 	$(CC) $(CFLAGS) $< -o $@
 
+# Build separate verifiers so the selected solver is explicit.
+# The included solver source must be listed as a dependency.
+verify_before: verify.c oracle.c solver.c solver_original.c
+	$(CC) $(CFLAGS) -DVERIFY_OPTIMIZED=0 verify.c oracle.c -o $@
+
+verify_after: verify.c oracle.c solver_opt.c solver_original.c
+	$(CC) $(CFLAGS) -DVERIFY_OPTIMIZED=1 verify.c oracle.c -o $@
+
 # IDA* tests accept different shortest move sequences.
-verify: verify.c oracle.c solver.c solver_original.c
-	$(CC) $(CFLAGS) verify.c oracle.c -o $@
+check: check-before check-after
 
-check: solver verify $(VECTORS) tests/check_cli.py
+check-before: solver verify_before $(VECTORS) tests/check_cli.py
 	./solver --self-test
-	python3 tests/check_cli.py
-	./verify 10000
+	python3 tests/check_cli.py ./solver
+	./verify_before 10000
 
-# Full H1/H3 search validation on the host; this can take several minutes.
-exhaustive: verify
-	./verify
+check-after: solver_opt verify_after $(VECTORS) tests/check_cli.py
+	./solver_opt --self-test
+	python3 tests/check_cli.py ./solver_opt
+	./verify_after 10000
+
+# Full H1/H3 validation for both versions; this can take several minutes.
+exhaustive: exhaustive-before exhaustive-after
+
+exhaustive-before: verify_before
+	./verify_before
+
+exhaustive-after: verify_after
+	./verify_after
 
 solver_original: solver_original.c
 	$(CC) $(CFLAGS) $< -o $@
@@ -115,4 +137,4 @@ endif
 	$(CLANG_FORMAT) -i $(C_SOURCES)
 
 clean:
-	$(RM) solver mini solver_original verify
+	$(RM) solver solver_opt mini solver_original verify verify_before verify_after

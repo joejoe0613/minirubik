@@ -1,8 +1,11 @@
 from pathlib import Path
 import subprocess
+import sys
+
+binary = sys.argv[1] if len(sys.argv) > 1 else './solver'
 
 def run(args):
-    return subprocess.run(['./solver', *args], capture_output=True)
+    return subprocess.run([binary, *args], capture_output=True)
 for row in Path('tests/solutions.txt').read_text().splitlines():
     if not row or row.startswith('#'): continue
     state, expected = row.split('|')
@@ -22,6 +25,8 @@ bad = '1234567111111 123456711111111 02345671111111 82345671111111 1234567111111
 for args in [[], ['12345671111111']*2] + [[s] for s in bad]:
     assert run(args).returncode == 2, args
 for arg in ['21345671111111','--self-test']:
-    r = subprocess.run(['sh','-c','exec ./solver "$1" >&-', 'sh', arg], capture_output=True)
+    r = subprocess.run(
+    ['sh', '-c', 'exec "$1" "$2" >&-', 'sh', binary, arg],
+    capture_output=True)
     assert r.returncode == 1, r
 print('PASS 8 vectors: solve + optimal length + formatting; invalid input; closed stdout')
