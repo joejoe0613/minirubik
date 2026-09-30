@@ -3,3 +3,8 @@
 *.swp
 solver
 mini
+solver_opt
+solver_original
+verify
+verify_before
+verify_after
