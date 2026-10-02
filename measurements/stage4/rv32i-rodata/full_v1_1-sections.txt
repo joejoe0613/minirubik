@@ -1,0 +1,17 @@
+There are 8 section headers, starting at offset 0xc630:
+
+區段標頭：
+  [號] 名稱              類型            位址     偏移   大小   全 旗標 連結 資  齊
+  [ 0]                   NULL            00000000 000000 000000 00      0   0  0
+  [ 1] .text             PROGBITS        00000000 001000 00045c 00  AX  0   0  4
+  [ 2] .data             PROGBITS        10000000 00c000 00000c 00  WA  0   0  1
+  [ 3] .rodata           PROGBITS        0000045c 00145c 009e0b 00   A  0   0  2
+  [ 4] .riscv.attributes RISCV_ATTRIBUTES 00000000 00c00c 00001a 00      0   0  1
+  [ 5] .symtab           SYMTAB          00000000 00c028 0003c0 10      6  52  4
+  [ 6] .strtab           STRTAB          00000000 00c3e8 000206 00      0   0  1
+  [ 7] .shstrtab         STRTAB          00000000 00c5ee 000041 00      0   0  1
+Key to Flags:
+  W (write), A (alloc), X (execute), M (merge), S (strings), I (info),
+  L (link order), O (extra OS processing required), G (group), T (TLS),
+  C (compressed), x (unknown), o (OS specific), E (exclude),
+  p (processor specific)
