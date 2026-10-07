@@ -9,6 +9,7 @@
  * No count argument means exhaustive search validation.
  * Reports five source-level search counters, NOT RV32I instruction counts.
  */
+
 #include <inttypes.h>
 #include <time.h>
 #define SEARCH_STATS
@@ -19,7 +20,7 @@
 #if VERIFY_OPTIMIZED
 #include "solver_opt.c"
 #else
-#include "solver.c"
+#include "solver.c" 
 #endif
 #undef main
 
@@ -66,6 +67,7 @@ static int verify_transition_tables(void)
             uint16_t p = rank;
             for (int t = 0; t < 4; ++t)
                 p = permutation[face][p];
+                
             if (p != rank) {
                 fprintf(stderr, "FAIL: permutation order-4 violation at face %u, rank %u\n", face, rank);
                 return 0;
@@ -101,6 +103,7 @@ static int verify_transition_tables(void)
             uint16_t o = rank;
             for (int t = 0; t < 4; ++t)
                 o = orientation[face][o];
+
             if (o != rank) {
                 fprintf(stderr, "FAIL: orientation order-4 violation at face %u, rank %u\n", face, rank);
                 return 0;
@@ -175,6 +178,7 @@ int main(int argc, char **argv)
         if (permutation_distance[i] > max_perm)
             max_perm = permutation_distance[i];
     }
+
     if (max_perm != EXPECTED_MAX_PERM) {
         fprintf(stderr, "FAIL: unexpected max_perm %u (expected %u)\n",
                 max_perm, EXPECTED_MAX_PERM);
@@ -197,6 +201,7 @@ int main(int argc, char **argv)
         if (orientation_distance[i] > max_orient)
             max_orient = orientation_distance[i];
     }
+
     if (max_orient != EXPECTED_MAX_ORIENT) {
         fprintf(stderr, "FAIL: unexpected max_orient %u (expected %u)\n",
                 max_orient, EXPECTED_MAX_ORIENT);
@@ -214,6 +219,7 @@ int main(int argc, char **argv)
         if (distance[i] > max_oracle)
             max_oracle = distance[i];
     }
+
     if (max_oracle != EXPECTED_MAX_ORACLE) {
         fprintf(stderr, "FAIL: unexpected oracle diameter %u (expected %u)\n",
                 max_oracle, EXPECTED_MAX_ORACLE);

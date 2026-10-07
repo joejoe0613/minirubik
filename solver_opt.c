@@ -14,7 +14,7 @@ typedef struct {
     uint64_t mod3_evaluations;
     uint64_t move_lut_reads;
     uint64_t heuristic_calls;
-} search_stats_t;
+} search_stats_t; 
 static search_stats_t search_stats;
 #define COUNT(field) ((void) ++search_stats.field)
 #else
@@ -323,7 +323,7 @@ static int solve_ida(uint16_t p, uint16_t o, uint8_t path[MAX_SOLUTION])
         for (;;) {
             frame_t *frame = &stack[depth];
 
-            if (frame->next_move == MOVES || depth == bound) {
+            if (frame->next_move == MOVES /* || depth == bound */) {
                 if (depth == 0)
                     break;
                 --depth;
