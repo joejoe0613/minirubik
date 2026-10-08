@@ -14,7 +14,7 @@ typedef struct {
     uint64_t mod3_evaluations;
     uint64_t move_lut_reads;
     uint64_t heuristic_calls;
-} search_stats_t;
+} search_stats_t; 
 static search_stats_t search_stats;
 #define COUNT(field) ((void) ++search_stats.field)
 #else
@@ -292,33 +292,38 @@ static unsigned lower_bound(uint16_t p, uint16_t o)
     return a > b ? a : b;
 }
 
+static const uint8_t move_face[MOVES] = {0, 0, 0, 1, 1, 1, 2, 2, 2};
+static const uint8_t move_turn[MOVES] = {0, 1, 2, 0, 1, 2, 0, 1, 2};
+static const uint8_t next_face_start[MOVES] = {3, 3, 3, 6, 6, 6, 9, 9, 9};
+
 /* Explicit DFS frame. next_p/next_o reuse successive quarter turns on
  * the same face: R -> R2 -> R', then reset to p/o for the next face. */
 typedef struct {
     uint16_t p, o, next_p, next_o;
     uint8_t next_move;
+    uint8_t last_face;
 } frame_t;
 
 /* Nonrecursive IDA*. Returns optimal length, or -1 on model/search failure.
  * path[d] is the move FROM frame d TO frame d+1. No global visited table. */
 static int solve_ida(uint16_t p, uint16_t o, uint8_t path[MAX_SOLUTION])
 {
+    COUNT(goal_tests);
+    if (p == 0 && o == 0)
+        return 0;
+
     frame_t stack[MAX_SOLUTION + 1];
     unsigned bound = MEASURE(heuristic_calls, lower_bound(p, o));
 
     while (bound <= MAX_SOLUTION) {
         unsigned next_bound = MAX_SOLUTION + 1;
         unsigned depth = 0;
-        stack[0] = (frame_t) {p, o, p, o, 0};
+        stack[0] = (frame_t) {p, o, p, o, 0, 3};
 
         for (;;) {
             frame_t *frame = &stack[depth];
 
-            COUNT(goal_tests);
-            if (frame->p == 0 && frame->o == 0)
-                return (int) depth;
-
-            if (frame->next_move == MOVES || depth == bound) {
+            if (frame->next_move == MOVES /* || depth == bound */) {
                 if (depth == 0)
                     break;
                 --depth;
@@ -326,24 +331,31 @@ static int solve_ida(uint16_t p, uint16_t o, uint8_t path[MAX_SOLUTION])
             }
             
             uint8_t move = frame->next_move++;
-            unsigned face = MEASURE(div3_evaluations, move / 3U);
+            uint8_t face = MEASURE(move_lut_reads, move_face[move]);
 
             /* Two consecutive moves of one face combine into <=1 move.
              * Thus no shortest path contains such a pair. */
-            if (depth && face == MEASURE(div3_evaluations, path[depth - 1] / 3U)) {
-                frame->next_move = (uint8_t) ((face + 1) * 3);
+            if (face == frame->last_face) {
+                frame->next_move = MEASURE(move_lut_reads, next_face_start[move]);
                 continue;
             }
 
-            if (MEASURE(mod3_evaluations, move % 3U) == 0) {
+            if (MEASURE(move_lut_reads, move_turn[move]) == 0) {
                 frame->next_p = frame->p;
                 frame->next_o = frame->o;
             }
             
             frame->next_p = permutation[face][frame->next_p];
             frame->next_o = orientation[face][frame->next_o];
-            unsigned f = depth + 1 + MEASURE(heuristic_calls,
+            unsigned h = MEASURE(heuristic_calls,
                 lower_bound(frame->next_p, frame->next_o));
+            COUNT(goal_tests);
+            if (h == 0) {
+                path[depth] = move;
+                return (int) (depth + 1);
+            }
+
+            unsigned f = depth + 1 + h;
 
             if (f > bound) {
                 if (f < next_bound)
@@ -353,7 +365,7 @@ static int solve_ida(uint16_t p, uint16_t o, uint8_t path[MAX_SOLUTION])
 
             path[depth] = move;
             uint16_t np = frame->next_p, no = frame->next_o;
-            stack[++depth] = (frame_t) {np, no, np, no, 0};
+            stack[++depth] = (frame_t) {np, no, np, no, 0, face};
         }
 
         bound = next_bound;

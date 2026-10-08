@@ -1,0 +1,18 @@
+Testing: solver_opt.c
+Search coverage: 10000/3674160 states (deterministic sample)
+Transition Tables: PASS (Exact model match, Bijective, Order-4 verified)
+Distance Tables: PASS (All filled; Solved entry = 0; Max P = 7, Max O = 6, Diameter = 11)
+H2: PASS (including zero-distance uniqueness in both abstractions)
+H1: PASS all 3674160 states
+H4: N/A (current distance arrays are unpacked)
+PASS 10000/3674160 states: optimal length, original-model replay; 1.411 host clock seconds
+H3: SAMPLE PASSED ONLY; run without a count for complete H3
+Time includes counters, search, correctness checks and replay; not a speedup benchmark.
+Search operation counts (whole corpus; C source-level events):
+goal_tests: 160708063
+div3_evaluations: 0
+mod3_evaluations: 0
+move_lut_reads: 374833160
+heuristic_calls: 160708062
+Move LUT element bytes: 27
+Tables: 40383 bytes; DFS frames: 120 bytes; path: 11 bytes

@@ -1,0 +1,4 @@
+Transition Tables: PASS (Exact model match, Bijective, Order-4 verified)
+Distance Tables: PASS (All filled; Solved entry = 0; Max P = 7, Max O = 6, Diameter = 11)
+PASS 3674160/3674160 states: admissible h, optimal length, original-model replay; 505.325 CPU s
+Tables: 40383 bytes; DFS frames: 120 bytes; path: 11 bytes

@@ -1,0 +1,14 @@
+ref_worst2.elf  :
+section              size   addr
+.text                1260      0
+.rodata             40440   1260
+.comment               40      0
+.riscv.attributes      28      0
+.debug_aranges         64      0
+.debug_info            76      0
+.debug_abbrev          40      0
+.debug_line           514      0
+.debug_str            321      0
+Total               42783
+
+

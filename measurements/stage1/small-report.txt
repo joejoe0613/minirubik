@@ -1,0 +1,11 @@
+
+Program exited with code: 0
+===== instructions retired
+6904
+===== wall-clock model execution time (ms)
+2
+===== simulation information (processor configuration, input file, ...)
+ISA extensions: 
+processor: RV32_ISS
+source file: probe-small.elf
+

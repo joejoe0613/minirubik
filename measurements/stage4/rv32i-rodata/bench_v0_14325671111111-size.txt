@@ -1,0 +1,9 @@
+/home/bb613/桌面/CA/HW1/test_R32VI/gnu-rodata/rodata-report.6RP0g1/bench_v0_14325671111111.elf  :
+section              size        addr
+.text                 788           0
+.data                  12   268435456
+.rodata             40438         788
+.riscv.attributes      26           0
+Total               41264
+
+

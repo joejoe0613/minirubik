@@ -1,0 +1,9 @@
+/home/bb613/桌面/CA/HW1/minirubik/measurements/stage4/solution-vectors/RV32_ISS.b7D3JX/02_62345713133111.elf  :
+section              size        addr
+.text                1112           0
+.data                  12   268435456
+.rodata             40459        1112
+.riscv.attributes      26           0
+Total               41609
+
+
